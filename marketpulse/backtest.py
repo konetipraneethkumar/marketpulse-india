@@ -35,6 +35,9 @@ class BacktestReport:
     accuracy_pct: float | None
     average_strategy_return_pct: float | None
     compounded_strategy_return_pct: float | None
+    average_buy_and_hold_return_pct: float | None
+    compounded_buy_and_hold_return_pct: float | None
+    average_excess_return_pct: float | None
     cost_bps_round_trip: float
     trades: tuple[TradeResult, ...]
 
@@ -99,8 +102,10 @@ def run_backtest(path: Path, cost_bps_round_trip: float = 10.0) -> BacktestRepor
             except (TypeError, ValueError) as exc:
                 raise ValueError(f"CSV row {row_number}: {exc}") from exc
 
-            if entry_time < signal_time:
-                raise ValueError(f"CSV row {row_number}: entry_time_ist cannot precede signal_time_ist (look-ahead risk)")
+            if signal_time.date() != day or entry_time.date() != day or exit_time.date() != day:
+                raise ValueError(f"CSV row {row_number}: date must match all intraday timestamps")
+            if entry_time <= signal_time:
+                raise ValueError(f"CSV row {row_number}: entry_time_ist must be strictly after signal_time_ist (look-ahead risk)")
             if exit_time <= entry_time:
                 raise ValueError(f"CSV row {row_number}: exit_time_ist must be after entry_time_ist")
             if not math.isfinite(entry_price) or not math.isfinite(exit_price) or entry_price <= 0 or exit_price <= 0:
@@ -141,11 +146,19 @@ def run_backtest(path: Path, cost_bps_round_trip: float = 10.0) -> BacktestRepor
     accuracy = (sum(t.correct_direction for t in results) / count * 100) if count else None
     average = (sum(t.strategy_return_pct for t in results) / count) if count else None
     compounded = None
+    average_buy_hold = None
+    compounded_buy_hold = None
+    average_excess = None
     if count:
         growth = 1.0
+        benchmark_growth = 1.0
         for trade in results:
             growth *= 1 + trade.strategy_return_pct / 100
+            benchmark_growth *= 1 + trade.gross_market_return_pct / 100
         compounded = (growth - 1) * 100
+        average_buy_hold = sum(t.gross_market_return_pct for t in results) / count
+        compounded_buy_hold = (benchmark_growth - 1) * 100
+        average_excess = average - average_buy_hold if average is not None else None
 
     return BacktestReport(
         rows_seen=rows_seen,
@@ -156,6 +169,9 @@ def run_backtest(path: Path, cost_bps_round_trip: float = 10.0) -> BacktestRepor
         accuracy_pct=accuracy,
         average_strategy_return_pct=average,
         compounded_strategy_return_pct=compounded,
+        average_buy_and_hold_return_pct=average_buy_hold,
+        compounded_buy_and_hold_return_pct=compounded_buy_hold,
+        average_excess_return_pct=average_excess,
         cost_bps_round_trip=cost_bps_round_trip,
         trades=tuple(results),
     )
