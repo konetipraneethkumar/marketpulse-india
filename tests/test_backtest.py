@@ -70,3 +70,35 @@ def test_empty_file_rows_returns_no_metrics(tmp_path):
     assert result.trades_taken == 0
     assert result.accuracy_pct is None
     assert result.compounded_strategy_return_pct is None
+
+
+
+def test_entry_at_exact_signal_time_is_rejected(tmp_path):
+    row = BULLISH.replace(
+        "2026-10-29T09:25:00+05:30", "2026-10-29T09:20:00+05:30"
+    )
+    with pytest.raises(ValueError, match="strictly after"):
+        run_backtest(write_csv(tmp_path, row))
+
+
+def test_backtest_rejects_timestamp_on_wrong_date(tmp_path):
+    row = BULLISH.replace(
+        "2026-10-29T15:20:00+05:30", "2026-10-30T15:20:00+05:30"
+    )
+    with pytest.raises(ValueError, match="date must match"):
+        run_backtest(write_csv(tmp_path, row))
+
+
+def test_benchmark_metrics_are_reported(tmp_path):
+    result = run_backtest(write_csv(tmp_path, BULLISH), cost_bps_round_trip=10)
+    assert result.average_buy_and_hold_return_pct == pytest.approx(2.0)
+    assert result.compounded_buy_and_hold_return_pct == pytest.approx(2.0)
+    assert result.average_excess_return_pct == pytest.approx(-0.1)
+
+
+def test_missing_critical_signal_data_is_skipped(tmp_path):
+    row = BULLISH.replace(",0.4,15,16,300,100,100,101", ",,15,16,300,100,100,101")
+    result = run_backtest(write_csv(tmp_path, row))
+    assert result.trades_taken == 0
+    assert result.insufficient_data == 1
+    assert result.accuracy_pct is None
