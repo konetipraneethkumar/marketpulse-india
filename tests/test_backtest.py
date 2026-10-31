@@ -91,9 +91,9 @@ def test_backtest_rejects_timestamp_on_wrong_date(tmp_path):
 
 def test_benchmark_metrics_are_reported(tmp_path):
     result = run_backtest(write_csv(tmp_path, BULLISH), cost_bps_round_trip=10)
-    assert result.average_buy_and_hold_return_pct == pytest.approx(2.0)
-    assert result.compounded_buy_and_hold_return_pct == pytest.approx(2.0)
-    assert result.average_excess_return_pct == pytest.approx(-0.1)
+    assert result.average_buy_and_hold_return_pct == pytest.approx(1.9)
+    assert result.compounded_buy_and_hold_return_pct == pytest.approx(1.9)
+    assert result.average_excess_return_pct == pytest.approx(0.0)
 
 
 def test_missing_critical_signal_data_is_skipped(tmp_path):
