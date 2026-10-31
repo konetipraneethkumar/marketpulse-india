@@ -25,3 +25,5 @@ jobs:
         run: python -m pytest -q
       - name: Smoke-test sample report
         run: python -m marketpulse report --date 2026-10-30
+      - name: Smoke-test sample backtest
+        run: python -m marketpulse backtest
