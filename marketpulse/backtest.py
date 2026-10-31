@@ -57,6 +57,8 @@ def _timestamp(row: dict[str, str], field: str, row_number: int) -> datetime:
         raise ValueError(f"CSV row {row_number}: invalid {field}; use ISO 8601 with timezone") from exc
     if value.tzinfo is None or value.utcoffset() is None:
         raise ValueError(f"CSV row {row_number}: {field} must include a timezone offset")
+    if value.utcoffset().total_seconds() != 5.5 * 60 * 60:
+        raise ValueError(f"CSV row {row_number}: {field} must use the Asia/Kolkata UTC+05:30 offset")
     return value
 
 
