@@ -79,6 +79,18 @@ Use your own CSV with `--data path/to/file.csv` and optionally set estimated com
 - `entry_price`, `exit_price` — positive prices for the measured forward interval
 - All signal input columns listed above
 
-The tool rejects entries before the signal timestamp and exits that are not after entry. It skips missing-critical-data rows and score-zero rows. Non-zero scores take a simple long (+1) or short (-1) directional position; round-trip costs are subtracted from each trade's return. It reports directional accuracy, average net trade return, and compounded net return.
+The tool requires signal, entry, and exit timestamps to use the India UTC+05:30 offset and match the row's trading date. Entry must be strictly after signal; exit must be after entry. It skips missing-critical-data rows and score-zero rows. Non-zero scores take a simple long (+1) or short (-1) directional position; round-trip costs are subtracted from each trade's return. It reports directional accuracy, average net trade return, compounded net return, and average return versus a buy-and-hold benchmark over the same entry/exit intervals.
 
 **Important limitations:** `data/sample_backtest.csv` is synthetic/illustrative only, not real historical market data. The backtest is a basic research harness, not evidence of a profitable strategy. Timestamp validation cannot prove that each feature was genuinely published by the signal time; only use licensed data and verify availability timestamps yourself. Costs are a flat estimate and do not model taxes, market impact, liquidity, slippage variation, position sizing, drawdown, or overlapping exposure. No broker execution is implemented. Do not use these results for live trading decisions.
+
+
+## Validation protocol before interpreting results
+
+1. **Verify inputs and provenance.** Record provider, retrieval date, instrument, timezone, sampling interval, and the time each feature was actually published. NSE provides official historical index data, India VIX history, and market advances/declines reports; see [NSE historical reports](https://www.nseindia.com/static/resources/historical-reports-capital-market-daily-monthly-archives), [historical index data](https://www.nseindia.com/reports-indices-historical-index-data), and [India VIX history](https://www.nseindia.com/reports-indices-historical-vix). These sources do not by themselves provide a verified timestamp-aligned GIFT Nifty history in this repository. Obtain GIFT Nifty data from a provider authorized to distribute it.
+2. **Use one row per trading session** and ensure every feature was available by `signal_time_ist`. Daily closing breadth or a daily close must not be used as if it were known at the opening. If availability time cannot be verified, exclude that feature or the session.
+3. **Use chronological splits.** Choose thresholds and any rules only on an earlier training period; freeze them; report results on a later untouched test period. Do not tune on the test period. Prefer walk-forward evaluation across multiple periods.
+4. **Compare baselines.** Compare against always-long buy-and-hold over the same entry/exit interval, and eventually a no-signal/flat baseline. Include realistic brokerage, taxes, spread, slippage and other costs for the instrument actually traded.
+5. **Report uncertainty, not only accuracy.** Use enough independent sessions, show per-period results, drawdown, volatility and confidence intervals. A high directional hit rate alone does not establish profitability.
+6. **Keep a reproducible raw-data snapshot** and data dictionary with checksums and source terms/licensing. Do not overwrite raw source files.
+
+**Current evidence status:** unit tests and sample-data smoke tests validate code paths, not the predictive value of the rules. The repository does not yet contain verified historical market data, so no real-history performance claim has been established.
