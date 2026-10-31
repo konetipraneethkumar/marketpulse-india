@@ -152,11 +152,12 @@ def run_backtest(path: Path, cost_bps_round_trip: float = 10.0) -> BacktestRepor
     if count:
         growth = 1.0
         benchmark_growth = 1.0
-        for trade in results:
+        net_benchmark_returns = [t.gross_market_return_pct - cost_bps_round_trip / 100 for t in results]
+        for trade, benchmark_return in zip(results, net_benchmark_returns):
             growth *= 1 + trade.strategy_return_pct / 100
-            benchmark_growth *= 1 + trade.gross_market_return_pct / 100
+            benchmark_growth *= 1 + benchmark_return / 100
         compounded = (growth - 1) * 100
-        average_buy_hold = sum(t.gross_market_return_pct for t in results) / count
+        average_buy_hold = sum(net_benchmark_returns) / count
         compounded_buy_hold = (benchmark_growth - 1) * 100
         average_excess = average - average_buy_hold if average is not None else None
 
