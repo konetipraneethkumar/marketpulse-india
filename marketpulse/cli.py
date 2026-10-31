@@ -65,6 +65,8 @@ def main() -> None:
         print(f"Directional accuracy: {result.accuracy_pct:.2f}%" if result.accuracy_pct is not None else "Directional accuracy: N/A")
         print(f"Average net strategy return per trade: {result.average_strategy_return_pct:+.4f}%" if result.average_strategy_return_pct is not None else "Average net strategy return per trade: N/A")
         print(f"Compounded net strategy return: {result.compounded_strategy_return_pct:+.4f}%" if result.compounded_strategy_return_pct is not None else "Compounded net strategy return: N/A")
+        print(f"Average buy-and-hold return over same intervals: {result.average_buy_and_hold_return_pct:+.4f}%" if result.average_buy_and_hold_return_pct is not None else "Average buy-and-hold return over same intervals: N/A")
+        print(f"Average excess return vs buy-and-hold: {result.average_excess_return_pct:+.4f}%" if result.average_excess_return_pct is not None else "Average excess return vs buy-and-hold: N/A")
         print("\nResearch only. Results from sample data are illustrative, not evidence of a real trading edge.")
         return
 
